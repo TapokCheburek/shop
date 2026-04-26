@@ -34,5 +34,26 @@ services:
       POSTGRES_DB: bulbstore
     depends_on:
       - postgres
+  order-service:
+    build:
+      context: .
+      dockerfile: ./orders/Dockerfile
+    command:
+      - poetry
+      - run
+      - python
+      - main.py
+    container_name: order-service
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: bulbstore
+    depends_on:
+      - postgres
 volumes:
   pgdata:
