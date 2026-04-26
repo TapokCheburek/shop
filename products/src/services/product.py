@@ -1,10 +1,9 @@
 from sqlalchemy.orm import Session
-from .. import models
+from src import models
+from src.schemas.product import ProductCreate, ProductUpdate
 from typing import List, Optional
 from uuid import UUID
-from ..repositories.product import product_repo
-from ..schemas.product import ProductCreate, ProductUpdate
-
+from src.repositories.product import product_repo
 
 def get_product(db: Session, product_id: UUID) -> Optional[models.Product]:
     return product_repo.get_by_id(db, product_id)
@@ -12,8 +11,30 @@ def get_product(db: Session, product_id: UUID) -> Optional[models.Product]:
 def get_product_by_name(db: Session, name: str) -> Optional[models.Product]:
     return product_repo.get_by_name(db, name)
 
-def get_products(db: Session, skip: int = 0, limit: int = 100) -> List[models.Product]:
-    return product_repo.get_all(db, skip=skip, limit=limit)
+def get_products(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_power: Optional[int] = None,
+    max_power: Optional[int] = None,
+    socket: Optional[str] = None,
+    type: Optional[str] = None,
+    in_stock: Optional[bool] = None
+) -> List[models.Product]:
+    return product_repo.get_all(
+        db,
+        skip=skip,
+        limit=limit,
+        min_price=min_price,
+        max_price=max_price,
+        min_power=min_power,
+        max_power=max_power,
+        socket=socket,
+        type=type,
+        in_stock=in_stock
+    )
 
 def create_product(db: Session, product: ProductCreate) -> models.Product:
     return product_repo.create(db, product)

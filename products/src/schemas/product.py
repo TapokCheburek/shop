@@ -13,7 +13,6 @@ class ProductBase(BaseModel):
     type: str = Field(..., description="Тип лампочки")
     description: Optional[str] = Field(None, description="Описание товара")
     quantity: int = Field(0, description="Остаток на складе")
-    category_id: UUID = Field(..., description="ID категории")
 
 class ProductCreate(ProductBase):
     pass
@@ -27,7 +26,6 @@ class ProductUpdate(BaseModel):
     type: Optional[str] = None
     description: Optional[str] = None
     quantity: Optional[int] = None
-    category_id: Optional[UUID] = None
     is_deleted: Optional[bool] = None
 
 class ProductResponse(ProductBase):
