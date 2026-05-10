@@ -65,6 +65,18 @@ class ProductRepository:
         db.refresh(db_product)
         return db_product
 
+    def deduct_quantity(self, db: Session, product_id: UUID, quantity: int) -> Optional[models.Product]:
+        product = db.query(models.Product).filter(
+            models.Product.id == product_id,
+            models.Product.is_deleted == False
+        ).with_for_update().first()
+        if not product or product.quantity < quantity:
+            return None
+        product.quantity -= quantity
+        db.commit()
+        db.refresh(product)
+        return product
+
     def delete(self, db: Session, db_product: models.Product) -> bool:
         db_product.is_deleted = True
         db.commit()

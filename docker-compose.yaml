@@ -1,18 +1,35 @@
 version: '3.8'
 
 services:
-  postgres:
+  postgres-products:
     image: postgres:16
-    container_name: postgres
+    container_name: postgres-products
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: bulbstore
-    ports:
-      - "5433:5432"
+      POSTGRES_DB: products_db
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata-products:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d products_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  postgres-orders:
+    image: postgres:16
+    container_name: postgres-orders
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orders_db
+    volumes:
+      - pgdata-orders:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d orders_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   product-service:
     build:
       context: .
@@ -29,11 +46,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: postgres-products
       POSTGRES_PORT: 5432
-      POSTGRES_DB: bulbstore
+      POSTGRES_DB: products_db
     depends_on:
-      - postgres
+      postgres-products:
+        condition: service_healthy
   order-service:
     build:
       context: .
@@ -50,10 +68,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: postgres-orders
       POSTGRES_PORT: 5432
-      POSTGRES_DB: bulbstore
+      POSTGRES_DB: orders_db
+      PRODUCT_SERVICE_URL: http://product-service:8000
     depends_on:
-      - postgres
+      postgres-orders:
+        condition: service_healthy
 volumes:
-  pgdata:
+  pgdata-products:
+  pgdata-orders:

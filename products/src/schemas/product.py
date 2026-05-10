@@ -6,7 +6,7 @@ from decimal import Decimal
 
 class ProductBase(BaseModel):
     name: str = Field(..., description="Название товара")
-    price: Decimal = Field(..., description="Цена")
+    price: Decimal = Field(..., max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"}, description="Цена")
     socket: str = Field(..., description="Цоколь (например, E27, E14, GU10)")
     power: int = Field(..., description="Мощность")
     color_temperature: int = Field(..., description="Температура цвета")
@@ -19,7 +19,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
-    price: Optional[Decimal] = None
+    price: Optional[Decimal] = Field(None, max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"})
     socket: Optional[str] = None
     power: Optional[int] = None
     color_temperature: Optional[int] = None

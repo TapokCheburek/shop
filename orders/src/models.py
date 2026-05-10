@@ -7,22 +7,6 @@ from sqlalchemy.orm import relationship
 
 from src.database import Base
 
-class Product(Base):
-    __tablename__ = "products"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    name = Column(String, nullable=False)
-    price = Column(Numeric(8, 2), nullable=False)
-    socket = Column(String, nullable=False)
-    power = Column(Integer, nullable=False)
-    color_temperature = Column(Integer, nullable=False)
-    type = Column(String, nullable=False)
-    description = Column(String)
-    quantity = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-
 class OrderStateEnum(str, enum.Enum):
     CREATED = "created"
     PAID = "paid"
@@ -64,7 +48,7 @@ class OrderItem(Base):
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), primary_key=True, nullable=False)
     product_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
     quantity = Column(Integer, nullable=False)
-    price = Column(Numeric(10, 2), nullable=False)
+    price = Column(Numeric(8, 2), nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)

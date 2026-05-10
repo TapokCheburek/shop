@@ -14,7 +14,7 @@ class OrderItemCreate(OrderItemBase):
 
 class OrderItemResponse(OrderItemBase):
     order_id: UUID
-    price: Decimal = Field(..., description="Цена товара (на момент заказа)")
+    price: Decimal = Field(..., max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"}, description="Цена товара (на момент заказа)")
     created_at: datetime
     is_deleted: bool
 
@@ -36,7 +36,7 @@ class OrderCreate(OrderBase):
 class OrderResponse(OrderBase):
     id: UUID
     order_number: str
-    total_amount: Decimal
+    total_amount: Decimal = Field(..., max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"})
     created_at: datetime
     updated_at: datetime
     is_deleted: bool

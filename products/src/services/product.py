@@ -12,16 +12,16 @@ def get_product_by_name(db: Session, name: str) -> Optional[models.Product]:
     return product_repo.get_by_name(db, name)
 
 def get_products(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-    min_power: Optional[int] = None,
-    max_power: Optional[int] = None,
-    socket: Optional[str] = None,
-    type: Optional[str] = None,
-    in_stock: Optional[bool] = None
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        min_power: Optional[int] = None,
+        max_power: Optional[int] = None,
+        socket: Optional[str] = None,
+        type: Optional[str] = None,
+        in_stock: Optional[bool] = None
 ) -> List[models.Product]:
     return product_repo.get_all(
         db,
@@ -46,6 +46,9 @@ def update_product(db: Session, product_id: UUID, product: ProductUpdate) -> Opt
 
     update_data = product.model_dump(exclude_unset=True)
     return product_repo.update(db, db_product, update_data)
+
+def deduct_quantity(db: Session, product_id: UUID, quantity: int) -> Optional[models.Product]:
+    return product_repo.deduct_quantity(db, product_id, quantity)
 
 def delete_product(db: Session, product_id: UUID) -> bool:
     db_product = product_repo.get_by_id(db, product_id)

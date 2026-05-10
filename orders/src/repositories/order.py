@@ -18,28 +18,35 @@ class OrderRepository:
     def create(self, db: Session, order: OrderCreate) -> models.Order:
         order_number = generate_order_number()
 
-        total_amount = 0
-        # Проверяем наличие товаров и вычитаем их со склада
+        from decimal import Decimal
+        total_amount = Decimal('0')
+        product_prices = {}
+
+        import urllib.request
+        import urllib.error
+        import json
+        import os
+
+        product_service_url = os.getenv("PRODUCT_SERVICE_URL", "http://product-service:8000")
+
+        # Проверяем наличие товаров и вычитаем их со склада через HTTP-вызов
         for item in order.items:
-            product = db.query(models.Product).filter(
-                models.Product.id == item.product_id,
-                models.Product.is_deleted == False
-            ).with_for_update().first() # Блокируем строку для обновления
-
-            if not product:
-                raise HTTPException(status_code=404, detail=f"Товар с id {item.product_id} не найден")
-
-            if product.quantity < item.quantity:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Недостаточно товара '{product.name}' на складе. В наличии: {product.quantity}, Запрошено: {item.quantity}"
-                )
-
-            # Считаем сумму по реальной цене из БД
-            total_amount += product.price * item.quantity
-
-            # Вычитаем из БД
-            product.quantity -= item.quantity
+            try:
+                # В PostgreSQL нет распределенных транзакций по умолчанию, поэтому просто делаем патч
+                url = f"{product_service_url}/products/{item.product_id}/deduct?quantity={item.quantity}"
+                req = urllib.request.Request(url, method="PATCH")
+                with urllib.request.urlopen(req) as response:
+                    product_data = json.loads(response.read().decode())
+                    # Считаем сумму по реальной цене
+                    price = Decimal(str(product_data.get("price")))
+                    total_amount += price * Decimal(item.quantity)
+                    product_prices[str(item.product_id)] = price
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    raise HTTPException(status_code=400, detail=f"Товар с id {item.product_id} не найден или недостаточно на складе")
+                raise HTTPException(status_code=400, detail=f"Ошибка сервиса товаров: {e}")
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Ошибка связи с сервисом товаров: {e}")
 
         db_order = models.Order(
             order_number=order_number,
@@ -56,14 +63,11 @@ class OrderRepository:
         db.flush() # Чтобы получить db_order.id
 
         for item in order.items:
-            # Снова ищем цену, так как мы уже проверили существование
-            product = db.query(models.Product).filter(models.Product.id == item.product_id).first()
-
             db_order_item = models.OrderItem(
                 order_id=db_order.id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                price=product.price
+                price=product_prices[str(item.product_id)]
             )
             db.add(db_order_item)
 
