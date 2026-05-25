@@ -14,14 +14,15 @@ class OrderItemCreate(OrderItemBase):
 
 class OrderItemResponse(OrderItemBase):
     order_id: UUID
-    price: Decimal = Field(..., max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"}, description="Цена товара (на момент заказа)")
+    price: Decimal = Field(..., max_digits=10, decimal_places=2, json_schema_extra={"example": "100.00"}, description="Цена товара (на момент заказа)")
     created_at: datetime
     is_deleted: bool
-
+    
     class Config:
         from_attributes = True
 
 class OrderBase(BaseModel):
+    user_id: Optional[UUID] = None
     order_state: OrderStateEnum
     phone_number: str
     user_name: str
@@ -36,11 +37,11 @@ class OrderCreate(OrderBase):
 class OrderResponse(OrderBase):
     id: UUID
     order_number: str
-    total_amount: Decimal = Field(..., max_digits=8, decimal_places=2, json_schema_extra={"example": "100.00"})
+    total_amount: Decimal = Field(..., max_digits=10, decimal_places=2, json_schema_extra={"example": "100.00"})
     created_at: datetime
     updated_at: datetime
     is_deleted: bool
     items: List[OrderItemResponse]
-
+    
     class Config:
         from_attributes = True

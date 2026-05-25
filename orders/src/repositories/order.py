@@ -17,18 +17,18 @@ class OrderRepository:
 
     def create(self, db: Session, order: OrderCreate) -> models.Order:
         order_number = generate_order_number()
-
+        
         from decimal import Decimal
         total_amount = Decimal('0')
         product_prices = {}
-
+        
         import urllib.request
         import urllib.error
         import json
         import os
-
+        
         product_service_url = os.getenv("PRODUCT_SERVICE_URL", "http://product-service:8000")
-
+        
         # Проверяем наличие товаров и вычитаем их со склада через HTTP-вызов
         for item in order.items:
             try:
@@ -47,9 +47,10 @@ class OrderRepository:
                 raise HTTPException(status_code=400, detail=f"Ошибка сервиса товаров: {e}")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Ошибка связи с сервисом товаров: {e}")
-
+        
         db_order = models.Order(
             order_number=order_number,
+            user_id=order.user_id,
             order_state=order.order_state,
             phone_number=order.phone_number,
             user_name=order.user_name,
@@ -61,7 +62,7 @@ class OrderRepository:
         )
         db.add(db_order)
         db.flush() # Чтобы получить db_order.id
-
+        
         for item in order.items:
             db_order_item = models.OrderItem(
                 order_id=db_order.id,
@@ -70,7 +71,7 @@ class OrderRepository:
                 price=product_prices[str(item.product_id)]
             )
             db.add(db_order_item)
-
+            
         db.commit()
         db.refresh(db_order)
         return db_order

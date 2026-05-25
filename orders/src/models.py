@@ -24,8 +24,9 @@ class DeliveryTypeEnum(str, enum.Enum):
 
 class Order(Base):
     __tablename__ = "orders"
-
+    
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=True) # Adding user_id
     order_number = Column(String, nullable=False, unique=True)
     order_state = Column(SQLEnum(OrderStateEnum), nullable=False, default=OrderStateEnum.CREATED)
     phone_number = Column(String, nullable=False)
@@ -35,22 +36,22 @@ class Order(Base):
     state = Column(SQLEnum(StateEnum), nullable=False, default=StateEnum.NEW)
     total_amount = Column(Numeric(10, 2), nullable=False)
     comment = Column(String, nullable=True)
-
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
-
+    
     items = relationship("OrderItem", back_populates="order")
 
 class OrderItem(Base):
     __tablename__ = "order_item"
-
+    
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), primary_key=True, nullable=False)
     product_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
     quantity = Column(Integer, nullable=False)
-    price = Column(Numeric(8, 2), nullable=False)
-
+    price = Column(Numeric(10, 2), nullable=False)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
-
+    
     order = relationship("Order", back_populates="items")

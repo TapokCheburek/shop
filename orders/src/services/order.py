@@ -9,4 +9,3 @@ def get_order_by_number(db: Session, order_number: str) -> Optional[models.Order
 
 def create_order(db: Session, order: OrderCreate) -> models.Order:
     return order_repo.create(db, order)
-

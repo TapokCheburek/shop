@@ -75,6 +75,68 @@ services:
     depends_on:
       postgres-orders:
         condition: service_healthy
+
+
+  postgres-auth:
+    image: postgres:16
+    container_name: postgres-auth
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    volumes:
+      - pgdata-auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./auth/Dockerfile
+    command:
+      - poetry
+      - run
+      - python
+      - main.py
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: postgres-auth
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: auth_db
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api_gateway/Dockerfile
+    command:
+      - poetry
+      - run
+      - python
+      - main.py
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8002
+      PRODUCT_SERVICE_URL: http://product-service:8000
+      ORDER_SERVICE_URL: http://order-service:8001
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
 volumes:
   pgdata-products:
   pgdata-orders:
+  pgdata-auth:
